@@ -1,5 +1,6 @@
 // Modules
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow, webContents} = require('electron')
+const windowStateKeeper = require('electron-window-state')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -8,8 +9,16 @@ let mainWindow, secondaryWindow
 // Create a new BrowserWindow when `app` is ready
 function createWindow () {
 
+  let winState = windowStateKeeper({
+    defaultWidth: 1000, defaultHeight: 800
+  })
+
   mainWindow = new BrowserWindow({
-    width: 1000, height: 800,
+    width: winState.width, height: winState.height,
+    x: winState.x, y: winState.y,
+    minWidth: 300, minHeight: 150,
+    //frame: false,
+    //titleBarStyle: 'hidden',
     webPreferences: {
       // --- !! IMPORTANT !! ---
       // Disable 'contextIsolation' to allow 'nodeIntegration'
@@ -41,6 +50,9 @@ function createWindow () {
   // Load index.html into the new BrowserWindow
   mainWindow.loadFile('index.html')
   // mainWindow.loadURL('https://www.google.com/')
+
+  winState.manage(mainWindow)
+
   secondaryWindow.loadFile('secondary.html')
 
   setTimeout( () => {
@@ -53,6 +65,57 @@ function createWindow () {
 
   // Open DevTools - Remove for PRODUCTION!
   mainWindow.webContents.openDevTools();
+
+  let wc = mainWindow.webContents;
+
+  wc.on('context-menu', (e, params) => {
+    // console.log(`Context menu opened on: ${params.mediaType} at x:${params.x}, y:${params.y}`);
+    // console.log(`User selected text: ${params.selectionText}`);
+    // console.log(`Selection can be copied: ${params.editFlags.canCopy}`);
+    let selectedText = params.selectionText;
+    wc.executeJavaScript(`alert("${selectedText}")`)
+  })
+
+  //console.log(webContents.getAllWebContents());
+
+  /*
+  wc.on('media-started-playing', () => {
+    console.log('Video Started')
+  })
+
+  wc.on('media-paused', () => {
+    console.log('Video Paused')
+  })
+  
+  mainWindow.loadURL('https://httpbin.org/basic-auth/user/passwd')
+  wc.on('login', (e, request, authInfo, callback) => {
+    console.log('Logging in:');
+    callback('user', 'passwd')
+  })
+
+  wc.on('did-navigate', (e, url, statusCode, message) => {
+    console.log(`Navigated to: ${url}`);
+    console.log(statusCode);
+  })
+
+  /*
+  wc.on('before-input-event', (e, input) => {
+    console.log(`${input.key} : ${input.type}`)
+  })
+
+  wc.on('new-window', (e, url) => {
+    e.preventDefault()
+    console.log(`Preventing new window for: ${url}`)
+  })
+
+  wc.on('did-finish-load', () => {
+    console.log('Content fully loaded')
+  })
+
+  wc.on('dom-ready', () => {
+    console.log('DOM Ready')
+  })
+  */
 
   // mainWindow.once('ready-to-show', mainWindow.show);
 
