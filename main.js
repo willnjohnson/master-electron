@@ -1,5 +1,5 @@
 // Modules
-const {app, BrowserWindow, webContents} = require('electron')
+const {app, BrowserWindow, session, webContents} = require('electron')
 const windowStateKeeper = require('electron-window-state')
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -8,6 +8,8 @@ let mainWindow, secondaryWindow
 
 // Create a new BrowserWindow when `app` is ready
 function createWindow () {
+
+  let customSes = session.fromPartition('persist:part1');
 
   let winState = windowStateKeeper({
     defaultWidth: 1000, defaultHeight: 800
@@ -24,7 +26,8 @@ function createWindow () {
       // Disable 'contextIsolation' to allow 'nodeIntegration'
       // 'contextIsolation' defaults to "true" as from Electron v12
       contextIsolation: false,
-      nodeIntegration: true
+      nodeIntegration: true,
+      session: customSes
     },
     // show: false,
     backgroundColor: '#2B2E3B'
@@ -38,6 +41,7 @@ function createWindow () {
       // 'contextIsolation' defaults to "true" as from Electron v12
       contextIsolation: false,
       nodeIntegration: true
+      partition: 'persist:part1'
     },
     // show: false,
     parent: mainWindow,
@@ -46,6 +50,16 @@ function createWindow () {
     frame: false, // Additional: hide window frame and title bar
     titleBarStyle: 'hidden' // Additional: hide title bar (macOS)
   })
+
+  let ses = mainWindow.webContents.session;
+  let ses2 = secondaryWindow.webContents.session;
+  let defaultSes = session.defaultSession;
+
+  ses.clearStorageData();
+
+  console.log(Object.is(ses, ses2));
+  console.log(Object.is(ses, defaultSes));
+  console.log(Object.is(ses, customSes));
 
   // Load index.html into the new BrowserWindow
   mainWindow.loadFile('index.html')
@@ -65,6 +79,7 @@ function createWindow () {
 
   // Open DevTools - Remove for PRODUCTION!
   mainWindow.webContents.openDevTools();
+  // secondaryWindow.webContents.openDevTools();
 
   let wc = mainWindow.webContents;
 
