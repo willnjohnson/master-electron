@@ -112,6 +112,24 @@ function createWindow () {
   mainWindow.webContents.openDevTools();
   // secondaryWindow.webContents.openDevTools();
 
+  ses.on('will-download', (e, downloadItem, webContents) => {
+    // console.log('Starting download:')
+    let fileName = downloadItem.getFilename()
+    let fileSize = downloadItem.getTotalBytes()
+
+    // Save to desktop
+    downloadItem.setSavePath(app.getPath('desktop') + `/${fileName}`)
+
+    downloadItem.on('updated', (e, state) => {
+      let received = downloadItem.getReceivedBytes()
+
+      if (state === 'progressing' && received) {
+        let progress = Math.round((received/fileSize)+100)
+        webContents.executeJavaScript(`window.progress.value = ${progress}`)
+      }
+    })
+  })
+
   let wc = mainWindow.webContents;
 
   wc.on('context-menu', (e, params) => {
