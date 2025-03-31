@@ -9,7 +9,23 @@ let mainWindow, secondaryWindow
 // Create a new BrowserWindow when `app` is ready
 function createWindow () {
 
+  let ses = session.defaultSession;
   let customSes = session.fromPartition('persist:part1');
+
+  // ses.cookies.remove('https://myappdomain.com', 'cookie1')
+  //  .then( () => {
+  //    getCookies()
+  //  })
+
+  let getCookies = () => {
+    ses.cookies.get({ name:'cookie1' })
+      .then( cookies => {
+        console.log(cookies);
+      })
+      .catch( errors => {
+        console.log(errors);
+      })
+  }
 
   let winState = windowStateKeeper({
     defaultWidth: 1000, defaultHeight: 800
@@ -40,7 +56,7 @@ function createWindow () {
       // Disable 'contextIsolation' to allow 'nodeIntegration'
       // 'contextIsolation' defaults to "true" as from Electron v12
       contextIsolation: false,
-      nodeIntegration: true
+      nodeIntegration: true,
       partition: 'persist:part1'
     },
     // show: false,
@@ -51,7 +67,7 @@ function createWindow () {
     titleBarStyle: 'hidden' // Additional: hide title bar (macOS)
   })
 
-  let ses = mainWindow.webContents.session;
+  // let ses = mainWindow.webContents.session;
   let ses2 = secondaryWindow.webContents.session;
   let defaultSes = session.defaultSession;
 
@@ -64,6 +80,21 @@ function createWindow () {
   // Load index.html into the new BrowserWindow
   mainWindow.loadFile('index.html')
   // mainWindow.loadURL('https://www.google.com/')
+  // mainWindow.loadURL('https://github.com/')
+
+  let cookie = { url: 'https://myappdomain.com', name:'cookie1', value:'electron', expirationDate:1922818789 }
+
+  ses.cookies.set(cookie)
+    .then( () => {
+      console.log('cookie1 set')
+      getCookies();
+    })
+
+  /*
+  mainWindow.webContents.on('did-finish-load', e => {
+    getCookies();
+  })
+  */
 
   winState.manage(mainWindow)
 
